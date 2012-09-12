@@ -25,9 +25,7 @@ information.
 
 s3rocket was created by Brian Luczkiewicz <brian@blucz.com>
 
-Git repository access can be obtained at github:
-
-http://github.com/blucz/s3rocket
+Git repository: http://github.com/blucz/s3rocket
 
 
 ## Installing ##
@@ -41,7 +39,7 @@ http://github.com/blucz/s3rocket
 
 * libs3   >= 2.0
 
-  I recommend building libs3 from source. You can get it at [here](http://libs3.ischo.com.s3.amazonaws.com/index.html)
+  I recommend building libs3 from source. You can get it at http://libs3.ischo.com.s3.amazonaws.com/index.html
 
 * libcurl
 
