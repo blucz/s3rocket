@@ -1,31 +1,26 @@
 ## s3rocket ##
 
 s3rocket uploads and downloads large volumes of streaming data to/from amazon
-s3 very quickly.
+s3 very quickly. It is excellent for uploading large directory trees or data 
+that streams out of a process. 
 
 You don't need to know the size of the data in advance in order to upload it.
-The data is split among s3 objects of a fixed block size, and is uploaded on
-the fly in multiple threads.
-
-As such, it is excellent for uploading large directory trees or data that
-streams out of a process. It is especially excellent when run from inside the
-ec2 universe, where ample bandwidth to/from s3 is a given.
-
-This tool was initially designed to upload or download ~50gb of data spread
-across ~100,000 files to or from an EC2 instance in 10 minutes or less.
+The data is split among s3 objects of a fixed size, and is uploaded on the 
+fly in multiple threads.
 
 It is overkill for small files. If you're not transferring at least several
-gigabytes of data in each go, this is probably not for you.
+gigabytes of data in each go, this is probably not for you. This tool was 
+designed to upload or download ~50gb of data spread across ~100,000 files 
+to or from an EC2 instance in 10 minutes or less.
 
 
 ## Administrivia ##
 
-s3rocket is released under the GNU GPLv3. See the file COPYING for more
-information.
-
-s3rocket was created by Brian Luczkiewicz <brian@blucz.com>
-
+Author: Brian Luczkiewicz <brian@blucz.com>
 Git repository: http://github.com/blucz/s3rocket
+
+s3rocket is a victim of the GNU GPLv3 virus. See the file COPYING for more 
+information.
 
 
 ## Installing ##
@@ -39,7 +34,9 @@ Git repository: http://github.com/blucz/s3rocket
 
 * libs3   >= 2.0
 
-  I recommend building libs3 from source. You can get it at http://libs3.ischo.com.s3.amazonaws.com/index.html
+  You can get it at http://libs3.ischo.com.s3.amazonaws.com/index.html
+
+  I recommend building libs3 from source. 
 
 * libcurl
 
