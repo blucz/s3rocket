@@ -514,6 +514,7 @@ static void cmd_put(const char *file, const char *bucket_prefix) {
 
     close(fd);
     free_transfer_buffers(bufs, opt_jobs, opt_blocksize);
+    exit(0);
 }
 
 typedef struct {
@@ -743,11 +744,7 @@ static void cmd_get(const char *bucket_prefix, const char *file) {
 
     close(fd);
     free_transfer_buffers(bufs, opt_jobs, opt_blocksize);
-
-    for (i = 0; i < opt_jobs; i++) {
-        transfer_buf_t *buf = &bufs[i];
-        pthread_create(&buf->thread, NULL, put_job, buf);
-    }
+    exit(0);
 }
 
 int main(int argc, char **argv) {
