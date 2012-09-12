@@ -28,7 +28,6 @@ information.
 ### Supported Platforms: ###
 
 - Linux
-- Mac OS X
 
 ### Dependencies: ###
 
