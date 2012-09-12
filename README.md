@@ -71,7 +71,7 @@ Building s3rocket:
     Usage: s3rocket [OPTION]... put FILE S3BUCKET[:PREFIX]
 
            copy a file or stream to S3BUCKET.
-           Use '-' to read data from stdin stdin
+           Use '-' to read data from stdin
 
       or:  s3rocket [OPTION]... get S3BUCKET[:PREFIX] FILE
 

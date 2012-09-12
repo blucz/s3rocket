@@ -67,7 +67,7 @@ int usage(const char *self) {
     fprintf(stderr, "Usage: %s [OPTION]... put FILE S3BUCKET[:PREFIX]\n", self);
     fprintf(stderr, "\n");
     fprintf(stderr, "       copy a file or stream to S3BUCKET.\n");
-    fprintf(stderr, "       Use '-' to read data from stdin stdin\n");
+    fprintf(stderr, "       Use '-' to read data from stdin\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  or:  %s [OPTION]... get S3BUCKET[:PREFIX] FILE\n", self);
     fprintf(stderr, "\n");
