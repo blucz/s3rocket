@@ -69,7 +69,7 @@ Building s3rocket:
 ## Usage ##
 
 
-Run s3rocket with --help for detailed usage informatio
+Run s3rocket with --help for detailed usage information.
 
 #### Upload a directory tree to s3 ####
 
