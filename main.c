@@ -572,6 +572,7 @@ static void *get_job(void *arg) {
             pthread_cond_wait(&buf->cond_empty, &buf->mutex);
        }
        if (buf->state == STATE_DONE) {
+          pthread_mutex_unlock(&buf->mutex);
            done = 1;
            continue;
        }
@@ -596,6 +597,7 @@ static void *get_job(void *arg) {
         handler.responseHandler.completeCallback = download_complete_cb;
         handler.getObjectDataCallback = get_object_data_cb;
 
+       //fprintf(stderr,"downloading chunk %d\n", buf->ordinal);
         download_callback_data_t download = { S3StatusInternalError, buf, 0 };
         S3_get_object(&bucketcontext, key, 
                       NULL,     /* getConditions */
@@ -603,7 +605,6 @@ static void *get_job(void *arg) {
                       NULL,     /* requestContext */
                       &handler, &download);
 
-        pthread_mutex_lock(&buf->mutex);
         if (download.status == S3StatusErrorNoSuchKey) {       // we've reached the end
             buf->state = STATE_DONE;
             done = 1;
