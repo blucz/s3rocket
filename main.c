@@ -213,7 +213,7 @@ enum {
     STATE_EMPTY       = 0,
     STATE_FILLING     = 1,
     STATE_FULL        = 2,
-    STATE_DONE        = 4,
+    STATE_DONE        = 3,
 };
 
 typedef struct {
@@ -552,7 +552,7 @@ static S3Status get_object_data_cb(int bufferSize, const char *buffer, void *cal
     transfer_buf_t *buf = download->buf;
 
     if (bufferSize + buf->fill > download->size)
-        die("too much data received (%d > %d)", (int)(bufferSize + buf->fill), (int)download->size);
+        die("too much data received for block %d (%d > %d)", buf->ordinal, (int)(bufferSize + buf->fill), (int)download->size);
 
     memcpy((char*)buf->ptr + buf->fill, buffer, bufferSize);
     buf->fill += bufferSize;
@@ -568,10 +568,15 @@ static void *get_job(void *arg) {
     while (!done) {
         // wait for the buffer to be empty 
         pthread_mutex_lock(&buf->mutex);
-        while (buf->state != STATE_EMPTY)
+        while (buf->state != STATE_EMPTY && buf->state != STATE_DONE) {
             pthread_cond_wait(&buf->cond_empty, &buf->mutex);
+       }
+       if (buf->state == STATE_DONE) {
+           done = 1;
+           continue;
+       }
+
         buf->state = STATE_FILLING;
-        pthread_mutex_unlock(&buf->mutex);
 
         // buffer is empty. now download into it.
         
@@ -716,6 +721,7 @@ static void cmd_get(const char *bucket_prefix, const char *file) {
             off  += rc;
         }
 
+       //fprintf(stderr, "(%p) advance ordinal %d to %d slot=%d\n", buf, buf->ordinal, buf->ordinal + opt_jobs, ordinal%opt_jobs);
         buf->ordinal += opt_jobs;               // set the ordinal for the next chunk download
         buf->fill  = 0;                         // reset the fill pointer
         buf->state = STATE_EMPTY;               // mark the buffer as empty
@@ -730,7 +736,7 @@ static void cmd_get(const char *bucket_prefix, const char *file) {
         transfer_buf_t *buf = &bufs[i];
         pthread_mutex_lock(&buf->mutex);
         if (buf->state == STATE_FULL) {
-            buf->state = STATE_EMPTY;
+            buf->state = STATE_DONE;
             pthread_cond_signal(&buf->cond_empty);
         }
         pthread_mutex_unlock(&buf->mutex);
