@@ -325,12 +325,25 @@ static void upload_chunk(transfer_buf_t *buf) {
     handler.responseHandler.completeCallback = upload_complete_cb;
     handler.putObjectDataCallback = put_object_data_cb;
 
-    upload_callback_data_t upload = { S3StatusInternalError, buf, 0 };
-    S3_put_object(&bucketcontext, 
-                  key, buf->fill,
-                  &putproperties,
-                  NULL, /* requestContext */
-                  &handler, &upload);
+    int retry = 3;
+    for (;;) {
+        upload_callback_data_t upload = { S3StatusInternalError, buf, 0 };
+        S3_put_object(&bucketcontext, 
+                      key, buf->fill,
+                      &putproperties,
+                      NULL, /* requestContext */
+                      &handler, &upload);
+        if (upload.status == S3StatusOK) {
+            break;
+        } else {
+            if (--retry == 0) {
+                check_s3_error(upload.status, "upload failed");
+                break;
+            } else {
+                fprintf(stderr, "Warning: retrying upload of chunk %d due to: %s", buf->ordinal, S3_get_status_name(upload.status));
+            }
+        } 
+    }
 
     time_t now = time(NULL);
     if (now != start_time) {
@@ -572,7 +585,7 @@ static void *get_job(void *arg) {
             pthread_cond_wait(&buf->cond_empty, &buf->mutex);
        }
        if (buf->state == STATE_DONE) {
-          pthread_mutex_unlock(&buf->mutex);
+           pthread_mutex_unlock(&buf->mutex);
            done = 1;
            continue;
        }
@@ -597,30 +610,42 @@ static void *get_job(void *arg) {
         handler.responseHandler.completeCallback = download_complete_cb;
         handler.getObjectDataCallback = get_object_data_cb;
 
-       //fprintf(stderr,"downloading chunk %d\n", buf->ordinal);
-        download_callback_data_t download = { S3StatusInternalError, buf, 0 };
-        S3_get_object(&bucketcontext, key, 
-                      NULL,     /* getConditions */
-                      0, 0,     /* startByte, byteCount */
-                      NULL,     /* requestContext */
-                      &handler, &download);
 
-        if (download.status == S3StatusErrorNoSuchKey) {       // we've reached the end
-            buf->state = STATE_DONE;
-            done = 1;
-        } else { 
-            check_s3_error(download.status, "download failed");
-            buf->state = STATE_FULL;
+        int retry = 3;
+        for (;;) {
+            download_callback_data_t download = { S3StatusInternalError, buf, 0 };
+            //fprintf(stderr,"downloading chunk %d\n", buf->ordinal);
+            S3_get_object(&bucketcontext, key, 
+                          NULL,     /* getConditions */
+                          0, 0,     /* startByte, byteCount */
+                          NULL,     /* requestContext */
+                          &handler, &download);
 
-            if (buf->fill != download.size) die("wrong amount of data received");
+            if (download.status == S3StatusOK) {
+                buf->state = STATE_FULL;
 
-            time_t now = time(NULL);
-            if (now != start_time) {
-                int64_t progress    = bytes_downloaded;
-                int64_t progress_mb = progress / (1024 * 1024);
-                int64_t mb_per_sec  = progress / (now - start_time) / (1024 * 1024);
-                fprintf(stderr, "downloaded chunk #%d (%lldmb in %ds, %lldmb/s)\n", buf->ordinal, (long long int)progress_mb, (int)(now - start_time), (long long int)mb_per_sec);
-            }
+                if (buf->fill != download.size) die("wrong amount of data received");
+
+                time_t now = time(NULL);
+                if (now != start_time) {
+                    int64_t progress    = bytes_downloaded;
+                    int64_t progress_mb = progress / (1024 * 1024);
+                    int64_t mb_per_sec  = progress / (now - start_time) / (1024 * 1024);
+                    fprintf(stderr, "downloaded chunk #%d (%lldmb in %ds, %lldmb/s)\n", buf->ordinal, (long long int)progress_mb, (int)(now - start_time), (long long int)mb_per_sec);
+                }
+                break;
+            } else if (download.status == S3StatusErrorNoSuchKey) {
+                buf->state = STATE_DONE;
+                done = 1;
+                break;
+            } else {
+                if (--retry == 0) {
+                    check_s3_error(download.status, "download failed");
+                    break;
+                } else {
+                    fprintf(stderr, "Warning: retrying download of chunk %d due to: %s", buf->ordinal, S3_get_status_name(download.status));
+                }
+            } 
         }
 
         pthread_cond_signal(&buf->cond_full);
