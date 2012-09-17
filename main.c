@@ -340,7 +340,7 @@ static void upload_chunk(transfer_buf_t *buf) {
                 check_s3_error(upload.status, "upload failed");
                 break;
             } else {
-                fprintf(stderr, "Warning: retrying upload of chunk %d due to: %s", buf->ordinal, S3_get_status_name(upload.status));
+                fprintf(stderr, "Warning: retrying upload of chunk %d due to: %s\n", buf->ordinal, S3_get_status_name(upload.status));
             }
         } 
     }
