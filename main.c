@@ -614,6 +614,7 @@ static void *get_job(void *arg) {
         int retry = 3;
         for (;;) {
             download_callback_data_t download = { S3StatusInternalError, buf, 0 };
+            buf->fill = 0;
             //fprintf(stderr,"downloading chunk %d\n", buf->ordinal);
             S3_get_object(&bucketcontext, key, 
                           NULL,     /* getConditions */
