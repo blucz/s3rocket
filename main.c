@@ -45,6 +45,8 @@
 GCRY_THREAD_OPTION_PTHREAD_IMPL;
 #endif
 
+#define RETRY_COUNT 20
+
 /*
  * Global state from arguments/environment
  */
@@ -325,7 +327,7 @@ static void upload_chunk(transfer_buf_t *buf) {
     handler.responseHandler.completeCallback = upload_complete_cb;
     handler.putObjectDataCallback = put_object_data_cb;
 
-    int retry = 3;
+    int retry = RETRY_COUNT;
     for (;;) {
         upload_callback_data_t upload = { S3StatusInternalError, buf, 0 };
         S3_put_object(&bucketcontext, 
@@ -611,7 +613,7 @@ static void *get_job(void *arg) {
         handler.getObjectDataCallback = get_object_data_cb;
 
 
-        int retry = 3;
+        int retry = RETRY_COUNT;
         for (;;) {
             download_callback_data_t download = { S3StatusInternalError, buf, 0 };
             buf->fill = 0;
