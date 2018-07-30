@@ -2,7 +2,7 @@ TARGET=s3rocket
 
 CC=gcc
 CFLAGS=-g -O2 $(shell curl-config --cflags) -Wall
-LDFLAGS=-ls3 -lpthread -lm $(shell curl-config --libs)
+LDFLAGS=-ls3 -lpthread -lm $(shell curl-config --libs) -lgnutls -lgcrypt
 LD=gcc
 UNAME=$(shell uname)
 
