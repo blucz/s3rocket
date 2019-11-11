@@ -624,10 +624,8 @@ static void *get_job(void *arg) {
                           NULL,     /* requestContext */
                           &handler, &download);
 
-            if (download.status == S3StatusOK) {
+            if ((download.status == S3StatusOK) && (buf->fill == download.size)) {
                 buf->state = STATE_FULL;
-
-                if (buf->fill != download.size) die("wrong amount of data received");
 
                 time_t now = time(NULL);
                 if (now != start_time) {
@@ -646,7 +644,11 @@ static void *get_job(void *arg) {
                     check_s3_error(download.status, "download failed");
                     break;
                 } else {
-                    fprintf(stderr, "Warning: retrying download of chunk %d due to: %s\n", buf->ordinal, S3_get_status_name(download.status));
+                    if ((download.status == S3StatusOK) && (buf->fill == download.size)) {
+                        fprintf(stderr, "Warning: retrying download of chunk %d due to wrong amount of data received", buf->ordinal);
+                    } else {
+                        fprintf(stderr, "Warning: retrying download of chunk %d due to: %s\n", buf->ordinal, S3_get_status_name(download.status));
+                    }
                 }
             } 
         }
